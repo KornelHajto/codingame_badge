@@ -1,0 +1,19 @@
+{
+  "name": "codingame_badge",
+  "version": "0.0.1",
+  "description": "A webscraper and image generator tool, that gets your codingame rank and displays it in an image",
+  "homepage": "https://github.com/KornelHajto/codingame_badge#readme",
+  "bugs": {
+    "url": "https://github.com/KornelHajto/codingame_badge/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KornelHajto/codingame_badge.git"
+  },
+  "author": "KornelHajto",
+  "dependencies": {
+    "canvas": "^3.1.0",
+    "chrome-aws-lambda": "^10.1.0",
+    "puppeteer-core": "^10.4.0"
+  }
+}
