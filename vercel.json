@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/codingame_stats.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/codingame-stats",
+      "dest": "api/codingame_stats.py"
+    }
+  ]
+}
+
