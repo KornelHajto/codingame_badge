@@ -1,57 +1,33 @@
-import chromium from 'chrome-aws-lambda';
-import puppeteer from 'puppeteer-core';
-import { createCanvas } from 'canvas';
+import fetch from 'node-fetch';
+import cheerio from 'cheerio';
 
 export default async function handler(req, res) {
-  const profileId = req.query.id;
+  const profileId = req.query.profile;
   if (!profileId) {
-    return res.status(400).send('Missing profile id');
+    return res.status(400).json({ error: 'Missing profile ID' });
   }
 
-  let browser = null;
+  const url = `https://www.codingame.com/profile/${profileId}`;
+
   try {
-    browser = await puppeteer.launch({
-      args: chromium.args,
-      executablePath: await chromium.executablePath,
-      headless: chromium.headless,
-    });
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch: ${response.status}`);
 
-    const page = await browser.newPage();
-    await page.goto(
-      `https://www.codingame.com/profile/${profileId}`,
-      { waitUntil: 'networkidle0' }
-    );
+    const html = await response.text();
+    const $ = cheerio.load(html);
 
-    const rank = await page.$eval('.rankNumber-0-2-115', el => el.innerText);
-    const percent = await page.$eval('.rankPercent-0-2-117', el => el.innerText);
-
-    await browser.close();
-
-    const width = 400;
-    const height = 120;
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext('2d');
-
-    ctx.fillStyle = '#1E1E1E';
-    ctx.fillRect(0, 0, width, height);
-
-    ctx.fillStyle = '#7CC576';
-    ctx.font = 'bold 40px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(`Rank: ${rank}`, width / 2, 50);
-
-    ctx.font = '28px Arial';
-    ctx.fillText(`(${percent})`, width / 2, 90);
-
-    const buffer = canvas.toBuffer('image/png');
-
-    res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate');
-    res.status(200).end(buffer);
-  } catch (error) {
-    if (browser !== null) {
-      await browser.close();
+    // Example: select rank container and extract data
+    const rankContainer = $('.rankContainer-0-2-112');
+    if (!rankContainer.length) {
+      return res.status(404).json({ error: 'Rank info not found' });
     }
-    res.status(500).json({ error: error.message });
+
+    const rankNumber = rankContainer.find('.rankNumber-0-2-115').text();
+    const rankPercent = rankContainer.find('.rankPercent-0-2-117').text();
+
+    res.json({ rank: rankNumber, percent: rankPercent });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 }
+
